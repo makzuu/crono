@@ -11,7 +11,6 @@
 #define TARGET_FRAME_TIME (SECOND / FPS)
 #define FONTSIZE 32
 
-int init(SDL_Window **window, SDL_Renderer **renderer, TTF_Font **font);
 void input(SDL_Event *ev);
 void update(SDL_Renderer *renderer, TTF_Font *font, int *minutes, int *second);
 
@@ -26,10 +25,39 @@ int main(int argc, char *argv[]) {
     int minutes = atoi(argv[1]);
     int seconds = 0;
 
-    SDL_Window *window;
-    SDL_Renderer *renderer;
-    TTF_Font *font;
-    if (init(&window, &renderer, &font)) {
+    SDL_Window *window = NULL;
+    SDL_Renderer *renderer = NULL;
+    TTF_Font *font = NULL;
+
+    if (SDL_Init(SDL_INIT_VIDEO) < 0) {
+        fprintf(stderr, "%s\n", SDL_GetError());
+        return 1;
+    }
+
+    if (TTF_Init() == -1) {
+        fprintf(stderr, "%s\n", TTF_GetError());
+        return 1;
+    }
+
+    font = TTF_OpenFont("./fonts/vt323/VT323-Regular.ttf", FONTSIZE);
+    if (font == NULL) {
+        fprintf(stderr, "%s\n", TTF_GetError());
+        return 1;
+    }
+
+    window = SDL_CreateWindow("crono", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
+            WIN_WIDTH, WIN_HEIGHT, 0);
+    if (window == NULL) {
+        fprintf(stderr, "%s\n", SDL_GetError());
+        TTF_CloseFont(font);
+        return 1;
+    }
+
+    renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
+    if (renderer == NULL) {
+        TTF_CloseFont(font);
+        SDL_DestroyWindow(window);
+        fprintf(stderr, "%s\n", SDL_GetError());
         return 1;
     }
 
@@ -46,39 +74,6 @@ int main(int argc, char *argv[]) {
     TTF_CloseFont(font);
     TTF_Quit();
     SDL_Quit();
-
-    return 0;
-}
-
-int init(SDL_Window **window, SDL_Renderer **renderer, TTF_Font **font) {
-    if (SDL_Init(SDL_INIT_VIDEO) < 0) {
-        fprintf(stderr, "%s\n", SDL_GetError());
-        return 1;
-    }
-
-    if (TTF_Init() == -1) {
-        fprintf(stderr, "%s\n", TTF_GetError());
-        return 1;
-    }
-
-    *font = TTF_OpenFont("./fonts/vt323/VT323-Regular.ttf", FONTSIZE);
-    if (font == NULL) {
-        fprintf(stderr, "%s\n", TTF_GetError());
-        return 1;
-    }
-
-    *window = SDL_CreateWindow("crono", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
-            WIN_WIDTH, WIN_HEIGHT, 0);
-    if (*window == NULL) {
-        fprintf(stderr, "%s\n", SDL_GetError());
-        return 1;
-    }
-
-    *renderer = SDL_CreateRenderer(*window, -1, SDL_RENDERER_ACCELERATED);
-    if (*renderer == NULL) {
-        fprintf(stderr, "%s\n", SDL_GetError());
-        return 1;
-    }
 
     return 0;
 }
