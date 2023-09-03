@@ -9,7 +9,9 @@
 #define SECOND 1000.0
 #define FPS 30.0
 #define TARGET_FRAME_TIME (SECOND / FPS)
-#define FONTSIZE 32
+#define FONTSIZE 16
+
+#define SECOND_COOLDOWN SECOND
 
 void input(SDL_Event *ev);
 void update(SDL_Renderer *renderer, TTF_Font *font, int *minutes, int *second);
@@ -39,7 +41,7 @@ int main(int argc, char *argv[]) {
         return 1;
     }
 
-    font = TTF_OpenFont("./fonts/vt323/VT323-Regular.ttf", FONTSIZE);
+    font = TTF_OpenFont("./fonts/Minecraft.ttf", FONTSIZE);
     if (font == NULL) {
         fprintf(stderr, "%s\n", TTF_GetError());
         return 1;
@@ -67,7 +69,6 @@ int main(int argc, char *argv[]) {
         update(renderer, font, &minutes, &seconds);
     }
 
-
     SDL_DestroyRenderer(renderer);
     SDL_DestroyWindow(window);
 
@@ -94,18 +95,18 @@ void input(SDL_Event *ev) {
     }
 }
 
-int last_render = 0;
-int last_second = 0;
-int time_paused = 0;
-
 void update(SDL_Renderer *renderer, TTF_Font *font, int *minutes, int *seconds) {
+    static int last_render = 0;
+    static int second_cooldown = SECOND_COOLDOWN;
+
     int elapsed = SDL_GetTicks() - last_render;
     if (elapsed < TARGET_FRAME_TIME) {
         int delay = TARGET_FRAME_TIME - elapsed;
         SDL_Delay(delay);
     }
-    last_render = SDL_GetTicks();
+    elapsed = SDL_GetTicks() - last_render;
 
+    last_render = SDL_GetTicks();
 
     SDL_Color bg = { 0x18, 0x18, 0x18, SDL_ALPHA_OPAQUE };
     SDL_Color fg = {0xcc, 0xcc, 0xcc, SDL_ALPHA_OPAQUE };
@@ -119,16 +120,21 @@ void update(SDL_Renderer *renderer, TTF_Font *font, int *minutes, int *seconds) 
     SDL_Surface *sur = TTF_RenderText_Solid(font, time, fg);
     SDL_Texture *tex = SDL_CreateTextureFromSurface(renderer, sur);
 
-    SDL_Rect rect = { 100, 100, 440, 280 };
-    SDL_RenderCopy(renderer, tex, NULL, &rect);
+    const int scale = 8;
+    const int x_center = WIN_WIDTH / 2 - sur->w * scale / 2;
+    const int y_center = WIN_HEIGHT / 2 - sur->h * scale / 2;
 
-    if (*minutes == 0 && *seconds == 0) time_paused = 1;
+    SDL_Rect dst = { x_center, y_center, sur->w * scale, sur->h * scale };
+    SDL_RenderCopy(renderer, tex, NULL, &dst);
 
-    if (SDL_GetTicks() - last_second >= SECOND && !time_paused) {
-        if (*seconds == 0) (*minutes)--;
-        *seconds = (*seconds + 60 - 1) % 60;
+    if (*minutes != 0 || *seconds != 0) {
+        second_cooldown -= elapsed;
+        if (second_cooldown <= 0) {
+            if (*seconds == 0) (*minutes)--;
+            *seconds = (*seconds + 60 - 1) % 60;
 
-        last_second = SDL_GetTicks();
+            second_cooldown = SECOND_COOLDOWN;
+        }
     }
 
     SDL_FreeSurface(sur);
