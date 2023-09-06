@@ -1,0 +1,4 @@
+echo "on start command"
+echo "on pause command"
+echo "on resume command"
+echo "on end command"
