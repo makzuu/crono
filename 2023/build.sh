@@ -2,6 +2,8 @@
 
 set -xe
 
-CC=clang
+CC="clang"
+CFLAGS="-Wall -Wextra -pedantic"
+LIBS="`sdl2-config --cflags --libs` -lSDL2_ttf"
 
-$CC -Wall -Wextra -o crono crono.c `sdl2-config --cflags --libs` -lSDL2_ttf
+$CC $CFLAGS -o crono crono.c $LIBS
