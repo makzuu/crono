@@ -11,35 +11,16 @@
 
 #define SECOND_COOLDOWN SECOND
 
-#define AT_START    0
-#define AT_PAUSE    1
-#define AT_RESUME   2
-#define AT_END      3
-#define COMMAND_COUNT 4
-
 void input(SDL_Event *ev);
 void update(SDL_Renderer *renderer, TTF_Font *font, int *minutes, int *second);
-int get_commands(void);
-void free_commands(void);
 
 int running = 1;
 int time_paused = 0;
-int cmds = 0;
-
-char *commands[COMMAND_COUNT];
 
 int main(int argc, char *argv[]) {
     if (argc != 2) {
         printf("usage:\n\tcrono MINUTES\n");
         return 1;
-    }
-
-    if (get_commands() == 0) {
-        cmds = 1;
-    }
-
-    if (cmds) {
-        system(commands[AT_START]);
     }
 
     int minutes = atoi(argv[1]);
@@ -87,10 +68,6 @@ int main(int argc, char *argv[]) {
         update(renderer, font, &minutes, &seconds);
     }
 
-    if (cmds) {
-        system(commands[AT_END]);
-    }
-
     SDL_DestroyRenderer(renderer);
     SDL_DestroyWindow(window);
 
@@ -114,12 +91,6 @@ void input(SDL_Event *ev) {
                     } break;
                     case SDLK_SPACE: {
                         time_paused = !time_paused;
-                        if (cmds && time_paused) {
-                            system(commands[AT_PAUSE]);
-                        }
-                        if (cmds && !time_paused) {
-                            system(commands[AT_RESUME]);
-                        }
                     } break;
                 }
                 break;
@@ -204,33 +175,4 @@ void update(SDL_Renderer *renderer, TTF_Font *font, int *minutes, int *seconds) 
     update_time(minutes, seconds, &second_cooldown, elapsed);
 
     SDL_RenderPresent(renderer);
-}
-
-#define MAXLINE 80
-
-int get_commands(void) {
-    char buffer[MAXLINE];
-
-    FILE *f = fopen("./commands.crono", "r");
-    if (f == NULL) {
-        fprintf(stderr, "could not open config file\n");
-        return 1;
-    }
-
-    char *cmd;
-    int cnt = 0;
-    while ((cmd = fgets(buffer, MAXLINE, f)) != NULL) {
-        commands[cnt] = malloc(strlen(buffer));
-        strcpy(commands[cnt], buffer);
-        ++cnt;
-    }
-
-    fclose(f);
-    return 0;
-}
-
-void free_commands(void) {
-    for (int i = 0; i < COMMAND_COUNT; ++i) {
-        free(commands[i]);
-    }
 }
