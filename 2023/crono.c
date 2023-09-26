@@ -14,6 +14,33 @@
 void input(SDL_Event *ev);
 void update(SDL_Renderer *renderer, TTF_Font *font, int *minutes, int *second);
 
+#define SDL_ERROR 0
+#define TTF_ERROR 1
+
+void perr(int error)
+{
+    if (error == SDL_ERROR)
+        fprintf(stderr, "%s\n", SDL_GetError());
+    else
+        fprintf(stderr, "%s\n", TTF_GetError());
+}
+
+void cnull(void *p, int error)
+{
+    if(p == NULL) {
+        perr(error);
+        exit(1);
+    }
+}
+
+void ccode(int c, int error)
+{
+    if (c < 0) {
+        perr(error);
+        exit(1);
+    }
+}
+
 int running = 1;
 int time_paused = 0;
 
@@ -30,37 +57,16 @@ int main(int argc, char *argv[]) {
     SDL_Renderer *renderer = NULL;
     TTF_Font *font = NULL;
 
-    if (SDL_Init(SDL_INIT_VIDEO) < 0) {
-        fprintf(stderr, "%s\n", SDL_GetError());
-        return 1;
-    }
+    ccode(SDL_Init(SDL_INIT_VIDEO), SDL_ERROR);
 
-    if (TTF_Init() == -1) {
-        fprintf(stderr, "%s\n", TTF_GetError());
-        return 1;
-    }
+    ccode(TTF_Init(), TTF_ERROR);
 
-    font = TTF_OpenFont("./fonts/Minecraft.ttf", FONTSIZE);
-    if (font == NULL) {
-        fprintf(stderr, "%s\n", TTF_GetError());
-        return 1;
-    }
+    cnull(font = TTF_OpenFont("./fonts/Minecraft.ttf", FONTSIZE), TTF_ERROR);
 
-    window = SDL_CreateWindow("crono", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
-            WIN_WIDTH, WIN_HEIGHT, 0);
-    if (window == NULL) {
-        fprintf(stderr, "%s\n", SDL_GetError());
-        TTF_CloseFont(font);
-        return 1;
-    }
+    cnull(window = SDL_CreateWindow("crono", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
+            WIN_WIDTH, WIN_HEIGHT, 0), SDL_ERROR);
 
-    renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
-    if (renderer == NULL) {
-        TTF_CloseFont(font);
-        SDL_DestroyWindow(window);
-        fprintf(stderr, "%s\n", SDL_GetError());
-        return 1;
-    }
+    cnull(renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED), SDL_ERROR);
 
     SDL_Event ev;
     while (running) {
