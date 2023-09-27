@@ -41,12 +41,45 @@ void ccode(int c, int error)
     }
 }
 
+void usage(void)
+{
+    char usage[] =
+        "USAGE:\n"
+        "\t./crono MINUTES [START_COMMAND PAUSE/END_COMMAND]\n"
+        "EXAMPLES:\n"
+        "\t ./crono 30\n"
+        "\t ./crono 30 \"timew start task1\" \"timew stop\"\n";
+
+    printf("%s", usage);
+}
+
 int running = 1;
 int time_paused = 0;
 
+#define ARG_START_COMMAND 2
+#define ARG_PAUSE_COMMAND 3
+
+#define START_COMMAND 0
+#define PAUSE_COMMAND 1
+
+char *commands[2];
+
 int main(int argc, char *argv[]) {
-    if (argc != 2) {
-        printf("usage:\n\tcrono MINUTES\n");
+    if (argc == 4) {
+        size_t start_command_len = strlen(argv[ARG_START_COMMAND]);
+        size_t pause_command_len = strlen(argv[ARG_PAUSE_COMMAND]);
+
+        commands[START_COMMAND] = malloc(start_command_len);
+        commands[PAUSE_COMMAND] = malloc(pause_command_len);
+
+        strcpy(commands[START_COMMAND], argv[ARG_START_COMMAND]);
+        strcpy(commands[PAUSE_COMMAND], argv[ARG_PAUSE_COMMAND]);
+
+        system(commands[START_COMMAND]);
+    }
+
+    if (argc < 2) {
+        usage();
         return 1;
     }
 
@@ -74,6 +107,8 @@ int main(int argc, char *argv[]) {
         update(renderer, font, &minutes, &seconds);
     }
 
+    system(commands[PAUSE_COMMAND]);
+
     SDL_DestroyRenderer(renderer);
     SDL_DestroyWindow(window);
 
@@ -97,6 +132,11 @@ void input(SDL_Event *ev) {
                     } break;
                     case SDLK_SPACE: {
                         time_paused = !time_paused;
+                        if (time_paused) {
+                            system(commands[PAUSE_COMMAND]);
+                        } else {
+                            system(commands[START_COMMAND]);
+                        }
                     } break;
                 }
                 break;
