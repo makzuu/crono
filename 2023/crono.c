@@ -65,6 +65,16 @@ int time_paused = 0;
 char *commands[2];
 
 int main(int argc, char *argv[]) {
+    char font_src[46];
+    if (strcmp(argv[0], "./crono") == 0) {
+        strcpy(font_src, "./fonts/Minecraft.ttf");
+    } else if (strcmp(argv[0], "crono") == 0) {
+        strcpy(font_src, "/usr/local/share/fonts/truetype/Minecraft.ttf");
+    } else {
+        printf("ERROR\n");
+        return 1;
+    }
+
     if (argc == 4) {
         size_t start_command_len = strlen(argv[ARG_START_COMMAND]);
         size_t pause_command_len = strlen(argv[ARG_PAUSE_COMMAND]);
@@ -94,7 +104,7 @@ int main(int argc, char *argv[]) {
 
     ccode(TTF_Init(), TTF_ERROR);
 
-    cnull(font = TTF_OpenFont("./fonts/Minecraft.ttf", FONTSIZE), TTF_ERROR);
+    cnull(font = TTF_OpenFont(font_src, FONTSIZE), TTF_ERROR);
 
     cnull(window = SDL_CreateWindow("crono", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
             WIN_WIDTH, WIN_HEIGHT, 0), SDL_ERROR);
